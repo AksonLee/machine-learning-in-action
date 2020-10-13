@@ -2,6 +2,7 @@
 # Akson
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 # 加载一个简单的数据集
 def loadSimData():
@@ -98,7 +99,7 @@ def adaBoostTrainDS(dataArr, classLabels, numIt = 40):
         if errorRate == 0.0:
             break
     
-    return weakClassArr, endErrorRate
+    return weakClassArr,aggClassEst, endErrorRate
 
 # 在测试集上运行adaboost
 def adaClassify(dataToClass, classLabels, classifierArray):
@@ -118,18 +119,56 @@ def adaClassify(dataToClass, classLabels, classifierArray):
     
     return errorRate
 
+def plotROC(predStrengths, classLabels):
+    cur = (1.0, 1.0)
+    ySum = 1.0
+    numPosClas = sum(np.array(classLabels) == 1.0)
+    yStep = 1 / float(numPosClas)
+    xStep = 1 / float(len(classLabels) - numPosClas)
+    sortedIndicies = predStrengths.argsort()
+
+    fig = plt.figure()
+    fig.clf()
+    ax = plt.subplot(111)
+    for index in sortedIndicies.tolist()[0]:
+        if classLabels[index] == 1.0:
+            delX = 0
+            delY = yStep
+        else:
+            delX = xStep
+            delY = 0
+            ySum += cur[1]
+        ax.plot([cur[0], cur[0] - delX], [cur[1], cur[1] - delY], c = 'b')
+        cur = (cur[0] - delX, cur[1] - delY)
+
+    print('The area under the curve is: ', ySum * xStep)
+    ax.plot([0, 1], [0, 1], 'b--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC curve for AdaBoost Horse Colic Detection System')
+    ax.axis([0, 1, 0, 1])
+    plt.show()
+
+def testHorseColicClassify():
+    dataArr, trainingLabelArr = loadDataSet('horseColicTraining2.txt')
+    testArr, testLabelArr = loadDataSet('horseColicTest2.txt')
+    i = 1
+    while i < 1001:
+        classifierArray, aggClassEst, trainingErrorRate = adaBoostTrainDS(dataArr, trainingLabelArr, i)
+        testErrorRate = adaClassify(testArr, testLabelArr, classifierArray)
+        print('iter number: %d, trainErrorRate: %.3f, testErrorRate: %.3f' % (i, trainingErrorRate, testErrorRate))
+        i += 10
+
+def testPlotRoc():
+    dataArr, trainingLabelArr = loadDataSet('horseColicTraining2.txt')
+    classifierArray, aggClassEst, trainingErrorRate = adaBoostTrainDS(dataArr, trainingLabelArr, 50)
+    plotROC(aggClassEst.T, trainingLabelArr)
+
+
 # test
 if __name__ == '__main__':
     # dataMatrix, classLabels = loadSimData()
     # classifierArray = adaBoostTrainDS(dataMatrix, classLabels, 30)
     # print(adaClassify([[5, 5], [0, 0]], classifierArray))
-
-    dataArr, trainingLabelArr = loadDataSet('horseColicTraining2.txt')
-    testArr, testLabelArr = loadDataSet('horseColicTest2.txt')
-    i = 1
-    while i < 1001:
-        classifierArray, trainingErrorRate = adaBoostTrainDS(dataArr, trainingLabelArr, i)
-        testErrorRate = adaClassify(testArr, testLabelArr, classifierArray)
-        print('iter number: %d, trainErrorRate: %.3f, testErrorRate: %.3f' % (i, trainingErrorRate, testErrorRate))
-        i += 10
+    testPlotRoc()
 
