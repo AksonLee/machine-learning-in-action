@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
 
 def loadDataSet(filename):
     dataMat =[]
@@ -101,19 +103,61 @@ def biKmeans(dataSet, k, distMeas = distEclud):
         centList.append(bestNewCents[1, :])
         clusterAssment[np.nonzero(clusterAssment[:, 0].A == bestCentToSplit)[0], :] = bestClustAss
 
+    # 整理一下坑爹的myCentroids数据格式
+    myCentroidsList = []
+    for myCentroid in centList:
+        myCentroidsList.append(myCentroid.flatten().A[0])
+    centList = np.mat(myCentroidsList)
+
     return centList, clusterAssment
 
 def biKmeansTestMy():
     myData = np.mat(loadDataSet('testSet2.txt'))
     centList, myNewAssments = biKmeans(myData, 3)
     print(centList)
+
+
+def distSLC(vecA, vecB):
+    a = np.sin(vecA[0, 1] * np.pi / 180) * np.sin(vecB[0, 1] * np.pi / 180)
+    b = np.cos(vecA[0, 1] * np.pi / 180) * np.cos(vecB[0, 1] * np.pi / 180) * np.cos(np.pi *(vecB[0, 0] - vecA[0, 0]) / 180)
+
+    return np.arccos(a + b) * 6371.0
+
+
+def clusterClubs(numClust = 5):
+    dataList = []
+    with open('places.txt', 'r') as fr:
+        for line in fr.readlines():
+            lineArr = line.strip().split('\t')
+            dataList.append([float(lineArr[4]), float(lineArr[3])])
+    dataMatrix = np.mat(dataList)
+    myCentroids, clustAssing = biKmeans(dataMatrix, numClust, distMeas = distSLC)
+
+    fig = plt.figure()
+    rect = [0.1, 0.1, 0.8, 0.8]
+    scatterMarkers = ['s', 'o', '^', '8', 'p', 'd', 'v', 'h', '>', '<']
+    axprops = dict(xticks = [], yticks = [])
+    ax0 = fig.add_axes(rect, label = 'ax0', **axprops)
+    imgP = plt.imread('Portland.png')
+    ax0.imshow(imgP)
+    ax1 = fig.add_axes(rect, label = 'ax1', frameon = False)
+    for i in range(numClust):
+        ptsInCurrCluster = dataMatrix[np.nonzero(clustAssing[:, 0].A == i)[0], :]
+        markerStyle = scatterMarkers[i % len(scatterMarkers)]
+        ax1.scatter(ptsInCurrCluster[:, 0].flatten().A[0], ptsInCurrCluster[:, 1].flatten().A[0], marker = markerStyle, s = 90)
+    
+    ax1.scatter(myCentroids[:][:, 0].flatten().A[0], myCentroids[:][:, 1].flatten().A[0], marker = '+', s = 300)
+    plt.show()
     
 
+def clusterClubsTestMy():
+    clusterClubs(12)
 
 
 # test
 if __name__ == '__main__':
     # randCentTestMy()
     # kMeansTestMy()
-    biKmeansTestMy()
+    # biKmeansTestMy()
+    clusterClubsTestMy()
     pass
