@@ -102,12 +102,78 @@ def createTreeTestMy():
     myFPtree, myHeaderTab = createTree(initSet, 3)
     myFPtree.disp()
 
-    
 
+def ascendTree(leafNode, prefixPath):
+    if leafNode.parent != None:
+        prefixPath.append(leafNode.name)
+        ascendTree(leafNode.parent, prefixPath)
+
+
+def findPrefixPath(basePat, treeNode):
+    condPats = {}
+    while treeNode != None:
+        prefixPath = []
+        ascendTree(treeNode, prefixPath)
+        if len(prefixPath) > 1:
+            condPats[frozenset(prefixPath[1:])] = treeNode.count
+        treeNode = treeNode.nodeLink
+    
+    return condPats
+
+def findPrefixPathTestMy():
+    myDataSet = loadSimpleData()
+    # print(myDataSet)
+    initSet = createInitSet(myDataSet)
+    
+    myFPtree, myHeaderTab = createTree(initSet, 3)
+    
+    print(findPrefixPath('x', myHeaderTab['x'][1]))
+    print(findPrefixPath('z', myHeaderTab['z'][1]))
+    print(findPrefixPath('r', myHeaderTab['r'][1]))
+
+def mineTree(inTree, headerTable, minSup, preFix, freqItemList):
+    bigL = [v[0] for v in sorted(headerTable.items(), key = lambda p: p[1][0])]
+
+    for basePat in bigL:
+        newFreqSet = preFix.copy()
+        newFreqSet.add(basePat)
+        freqItemList.append(newFreqSet)
+        condPattBases = findPrefixPath(basePat, headerTable[basePat][1])
+        myCondTree, myHead = createTree(condPattBases, minSup)
+
+        if myHead != None:
+            print('conditional tree for: ', newFreqSet)
+            myCondTree.disp()
+            mineTree(myCondTree, myHead, minSup, newFreqSet, freqItemList)
+
+
+def mineTreeTestMy():
+    myDataSet = loadSimpleData()
+    # print(myDataSet)
+    initSet = createInitSet(myDataSet)
+    
+    myFPtree, myHeaderTab = createTree(initSet, 3)
+    freqItems = []
+    mineTree(myFPtree, myHeaderTab, 3, set([]), freqItems)
+
+
+def kosarakTestMy():
+    parsedData = [line.split() for line in open('kosarak.dat').readlines()]
+    initSet = createInitSet(parsedData)
+    myFPTree, myHeaderTab = createTree(initSet, 100000)
+
+    myFreqList = []
+    mineTree(myFPTree, myHeaderTab, 100000, set([]), myFreqList)
+
+    print(len(myFreqList))
+    print(myFreqList)
 
 
 # test
 if __name__ == '__main__':
     # treeNodeTestMy()
-    createTreeTestMy()
+    # createTreeTestMy()
+    # findPrefixPathTestMy()
+    # mineTreeTestMy()
+    kosarakTestMy()
         
