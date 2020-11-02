@@ -1,6 +1,4 @@
 # machine-learning-in-action
-机器学习实战 python3代码
+machine-learning-in-action in python3
 
-python版本： python3.8.6
-
-类库：numpy，matplotlib，bs4
+python3.8.6
