@@ -1,5 +1,5 @@
 [package]
-name = "ansi_terminal"
+name = "terminal_fun"
 version = "0.1.0"
 authors = ["Akson <Akson.L@outlook.com>"]
 edition = "2018"
